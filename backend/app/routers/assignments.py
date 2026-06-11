@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.models import Assignment, Asset, AssetStatus, User, UserRole
+from app.models import Assignment, Asset, AssetStatus, User, UserRole, Group
 from app.schemas import AssignmentCreate, AssignmentOut
 from app.dependencies import get_current_user
 
@@ -20,7 +20,7 @@ async def list_assignments(
 ):
     stmt = (
         select(Assignment)
-        .options(selectinload(Assignment.asset), selectinload(Assignment.user))
+        .options(selectinload(Assignment.asset), selectinload(Assignment.user), selectinload(Assignment.group))
         .order_by(Assignment.assigned_date.desc())
     )
     if user.role != UserRole.ADMIN:
@@ -31,7 +31,7 @@ async def list_assignments(
     return result.scalars().all()
 
 
-@router.post("", response_model=AssignmentOut)
+@router.post("", response_model=list[AssignmentOut], status_code=201)
 async def create_assignment(
     body: AssignmentCreate,
     db: AsyncSession = Depends(get_db),
@@ -43,28 +43,55 @@ async def create_assignment(
         raise HTTPException(status_code=404, detail="Asset not found")
     if asset.status != AssetStatus.AVAILABLE:
         raise HTTPException(status_code=400, detail="Asset is not available")
-    result = await db.execute(select(User).where(User.id == body.user_id))
-    target = result.scalar_one_or_none()
-    if not target:
-        raise HTTPException(status_code=404, detail="User not found")
-    assignment = Assignment(
-        asset_id=body.asset_id,
-        user_id=body.user_id,
-        assigned_by=user.id,
-        expected_return_date=date.fromisoformat(body.expected_return_date) if body.expected_return_date else None,
-        notes=body.notes,
-    )
+    if not body.user_id and not body.group_id:
+        raise HTTPException(status_code=400, detail="Provide user_id or group_id")
+
+    return_date = date.fromisoformat(body.expected_return_date) if body.expected_return_date else None
+
+    targets: list[User] = []
+    group = None
+    if body.group_id:
+        result = await db.execute(
+            select(Group).where(Group.id == body.group_id).options(selectinload(Group.members))
+        )
+        group = result.scalar_one_or_none()
+        if not group:
+            raise HTTPException(status_code=404, detail="Group not found")
+        targets = group.members
+    elif body.user_id:
+        result = await db.execute(select(User).where(User.id == body.user_id))
+        target = result.scalar_one_or_none()
+        if not target:
+            raise HTTPException(status_code=404, detail="User not found")
+        targets = [target]
+
+    assignments = []
+    for t in targets:
+        assignment = Assignment(
+            asset_id=body.asset_id,
+            user_id=t.id,
+            group_id=group.id if group else None,
+            assigned_by=user.id,
+            expected_return_date=return_date,
+            notes=body.notes,
+        )
+        db.add(assignment)
+        assignments.append(assignment)
+
     asset.status = AssetStatus.ASSIGNED
-    db.add(assignment)
     await db.commit()
-    await db.refresh(assignment)
+
+    for a in assignments:
+        await db.refresh(a)
+
+    ids = [a.id for a in assignments]
     stmt = (
         select(Assignment)
-        .where(Assignment.id == assignment.id)
-        .options(selectinload(Assignment.asset), selectinload(Assignment.user))
+        .where(Assignment.id.in_(ids))
+        .options(selectinload(Assignment.asset), selectinload(Assignment.user), selectinload(Assignment.group))
     )
     result = await db.execute(stmt)
-    return result.scalar_one()
+    return result.scalars().all()
 
 
 @router.put("/{assignment_id}/return", response_model=AssignmentOut)
@@ -76,7 +103,7 @@ async def return_assignment(
     stmt = (
         select(Assignment)
         .where(Assignment.id == assignment_id)
-        .options(selectinload(Assignment.asset), selectinload(Assignment.user))
+        .options(selectinload(Assignment.asset), selectinload(Assignment.user), selectinload(Assignment.group))
     )
     result = await db.execute(stmt)
     assignment = result.scalar_one_or_none()
@@ -100,7 +127,7 @@ async def my_assignments(
 ):
     stmt = (
         select(Assignment)
-        .options(selectinload(Assignment.asset), selectinload(Assignment.user))
+        .options(selectinload(Assignment.asset), selectinload(Assignment.user), selectinload(Assignment.group))
         .where(Assignment.user_id == user.id, Assignment.returned_date.is_(None))
         .order_by(Assignment.assigned_date.desc())
     )
