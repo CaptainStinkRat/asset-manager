@@ -35,6 +35,8 @@ export default function Assets() {
   const [showForm, setShowForm] = useState(false);
   const [editAsset, setEditAsset] = useState<Asset | null>(null);
   const [form, setForm] = useState({ name: '', description: '', category: '', serial_number: '', purchase_date: '', purchase_price: '', eol_date: '' });
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [activeGroupTab, setActiveGroupTab] = useState<number | null>(null);
 
   // Assign modal state
   const [assignAsset, setAssignAsset] = useState<Asset | null>(null);
@@ -53,10 +55,15 @@ export default function Assets() {
     const params: any = {};
     if (search) params.search = search;
     if (filterStatus) params.status = filterStatus;
+    if (activeGroupTab) params.group_id = activeGroupTab;
     api.get('/assets', { params }).then((r) => setAssets(r.data));
   };
 
-  useEffect(() => { load(); }, [search, filterStatus]);
+  useEffect(() => { load(); }, [search, filterStatus, activeGroupTab]);
+
+  useEffect(() => {
+    api.get('/groups').then((r) => setGroups(r.data));
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -161,6 +168,26 @@ export default function Assets() {
             {showForm ? 'Cancel' : '+ Add Asset'}
           </button>
         )}
+      </div>
+
+      <div style={{ display: 'flex', gap: 4, marginBottom: 16, flexWrap: 'wrap' }}>
+        <button
+          className={`btn btn-sm ${activeGroupTab === null ? 'btn-primary' : 'btn-ghost'}`}
+          onClick={() => setActiveGroupTab(null)}
+          style={{ borderRadius: 20 }}
+        >
+          All
+        </button>
+        {groups.map((g) => (
+          <button
+            key={g.id}
+            className={`btn btn-sm ${activeGroupTab === g.id ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setActiveGroupTab(g.id)}
+            style={{ borderRadius: 20 }}
+          >
+            {g.name}
+          </button>
+        ))}
       </div>
 
       <div className="filters">
