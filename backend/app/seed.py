@@ -3,7 +3,7 @@ import logging
 from sqlalchemy import select, text
 from sqlalchemy.exc import OperationalError
 from app.database import engine, Base, async_session
-from app.models import User, UserRole
+from app.models import User, UserRole, Group
 from app.auth import hash_password
 from app.config import ADMIN_USERNAME, ADMIN_PASSWORD
 
@@ -43,6 +43,16 @@ async def seed():
             log.info(f"Admin user created: {ADMIN_USERNAME} / {ADMIN_PASSWORD}")
         else:
             log.info("Admin user already exists")
+
+        GROUP_NAMES = ["SWIF-I", "Reveille Forge", "ADAT"]
+        for name in GROUP_NAMES:
+            result = await session.execute(select(Group).where(Group.name == name))
+            if not result.scalar_one_or_none():
+                session.add(Group(name=name, description=f"{name} group"))
+                log.info(f"Group created: {name}")
+            else:
+                log.info(f"Group already exists: {name}")
+        await session.commit()
     await engine.dispose()
 
 

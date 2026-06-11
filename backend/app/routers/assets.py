@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 
 from app.database import get_db
-from app.models import Asset, AssetStatus, User, UserRole
+from app.models import Asset, AssetStatus, Assignment, User, UserRole, group_members
 from app.schemas import AssetCreate, AssetUpdate, AssetOut
 from app.dependencies import get_current_user, require_admin
 
@@ -17,6 +17,7 @@ async def list_assets(
     category: Optional[str] = None,
     status: Optional[AssetStatus] = None,
     search: Optional[str] = None,
+    group_id: Optional[int] = None,
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
@@ -30,6 +31,17 @@ async def list_assets(
             Asset.name.ilike(f"%{search}%")
             | Asset.serial_number.ilike(f"%{search}%")
             | Asset.description.ilike(f"%{search}%")
+        )
+    if group_id:
+        stmt = stmt.where(
+            Asset.id.in_(
+                select(Assignment.asset_id).where(
+                    Assignment.returned_date.is_(None),
+                    Assignment.user_id.in_(
+                        select(group_members.c.user_id).where(group_members.c.group_id == group_id)
+                    ),
+                )
+            )
         )
     stmt = stmt.order_by(Asset.name)
     result = await db.execute(stmt)
