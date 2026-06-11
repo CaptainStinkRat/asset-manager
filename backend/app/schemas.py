@@ -21,6 +21,28 @@ class UserOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class GroupCreate(BaseModel):
+    name: str
+    description: str = ""
+    member_ids: list[int] = []
+
+
+class GroupUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    member_ids: Optional[list[int]] = None
+
+
+class GroupOut(BaseModel):
+    id: int
+    name: str
+    description: str
+    created_at: datetime.datetime
+    members: list[UserOut] = []
+
+    model_config = {"from_attributes": True}
+
+
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -71,7 +93,8 @@ class AssetOut(BaseModel):
 
 class AssignmentCreate(BaseModel):
     asset_id: int
-    user_id: int
+    user_id: Optional[int] = None
+    group_id: Optional[int] = None
     expected_return_date: Optional[str] = None
     notes: str = ""
 
@@ -80,6 +103,7 @@ class AssignmentOut(BaseModel):
     id: int
     asset_id: int
     user_id: int
+    group_id: Optional[int] = None
     assigned_by: Optional[int] = None
     assigned_date: datetime.datetime
     expected_return_date: Optional[datetime.date] = None
@@ -87,6 +111,7 @@ class AssignmentOut(BaseModel):
     notes: str
     asset: Optional[AssetOut] = None
     user: Optional[UserOut] = None
+    group: Optional[GroupOut] = None
 
     model_config = {"from_attributes": True}
 

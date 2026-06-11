@@ -1,6 +1,6 @@
 import datetime
 from sqlalchemy import (
-    Column, Integer, String, Text, Float, DateTime, Date, ForeignKey, Enum, Boolean
+    Column, Integer, String, Text, Float, DateTime, Date, ForeignKey, Enum, Boolean, Table
 )
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -35,6 +35,25 @@ class RequestType(str, enum.Enum):
     OTHER = "other"
 
 
+group_members = Table(
+    "group_members",
+    Base.metadata,
+    Column("group_id", Integer, ForeignKey("groups.id"), primary_key=True),
+    Column("user_id", Integer, ForeignKey("users.id"), primary_key=True),
+)
+
+
+class Group(Base):
+    __tablename__ = "groups"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, nullable=False, index=True)
+    description = Column(Text, default="")
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    members = relationship("User", secondary="group_members", back_populates="groups", lazy="selectin")
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -48,6 +67,7 @@ class User(Base):
 
     assignments = relationship("Assignment", foreign_keys="Assignment.user_id", back_populates="user")
     change_requests = relationship("ChangeRequest", foreign_keys="ChangeRequest.requester_id", back_populates="requester")
+    groups = relationship("Group", secondary="group_members", back_populates="members", lazy="selectin")
 
 
 class Asset(Base):
@@ -74,6 +94,7 @@ class Assignment(Base):
     id = Column(Integer, primary_key=True, index=True)
     asset_id = Column(Integer, ForeignKey("assets.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    group_id = Column(Integer, ForeignKey("groups.id"), nullable=True)
     assigned_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     assigned_date = Column(DateTime, default=datetime.datetime.utcnow)
     expected_return_date = Column(Date, nullable=True)
@@ -83,6 +104,7 @@ class Assignment(Base):
     asset = relationship("Asset", back_populates="assignments")
     user = relationship("User", foreign_keys=[user_id], back_populates="assignments")
     assigner = relationship("User", foreign_keys=[assigned_by])
+    group = relationship("Group", lazy="selectin")
 
 
 class ChangeRequest(Base):
