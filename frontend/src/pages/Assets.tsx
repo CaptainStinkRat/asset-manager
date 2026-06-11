@@ -69,16 +69,26 @@ export default function Assets() {
   return (
     <div>
       <div className="page-header">
-        <h1>Assets</h1>
+        <div>
+          <h1>Assets</h1>
+          <p className="page-subtitle">Manage your organization's assets</p>
+        </div>
         {isAdmin && (
-          <button className="btn btn-primary" onClick={() => { setEditAsset(null); setForm({ name: '', description: '', category: '', serial_number: '', purchase_date: '', purchase_price: '', eol_date: '' }); setShowForm(!showForm); }}>
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              setEditAsset(null);
+              setForm({ name: '', description: '', category: '', serial_number: '', purchase_date: '', purchase_price: '', eol_date: '' });
+              setShowForm(!showForm);
+            }}
+          >
             {showForm ? 'Cancel' : '+ Add Asset'}
           </button>
         )}
       </div>
 
       <div className="filters">
-        <input className="input" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        <input className="input" placeholder="Search assets..." value={search} onChange={(e) => setSearch(e.target.value)} />
         <select className="input" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
           <option value="">All Status</option>
           <option value="available">Available</option>
@@ -112,7 +122,7 @@ export default function Assets() {
             </div>
             <div className="form-group">
               <label>Purchase Price</label>
-              <input className="input" type="number" step="0.01" value={form.purchase_price} onChange={(e) => setForm({ ...form, purchase_price: e.target.value })} />
+              <input className="input" type="number" step="0.01" placeholder="0.00" value={form.purchase_price} onChange={(e) => setForm({ ...form, purchase_price: e.target.value })} />
             </div>
           </div>
           <div className="form-row">
@@ -129,39 +139,48 @@ export default function Assets() {
         </form>
       )}
 
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Serial</th>
-            <th>Status</th>
-            <th>EOL Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {assets.map((a) => {
-            const eolSoon = a.eol_date && new Date(a.eol_date) < new Date(Date.now() + 90 * 86400000) && a.status !== 'retired';
-            return (
-              <tr key={a.id} className={eolSoon ? 'row-warning' : ''}>
-                <td>{a.name}</td>
-                <td>{a.category}</td>
-                <td>{a.serial_number || '-'}</td>
-                <td><span className={`badge badge-${a.status}`}>{a.status}</span></td>
-                <td>{a.eol_date || '-'}</td>
-                <td className="actions">
-                  <button className="btn btn-sm btn-outline" onClick={() => openEdit(a)}>Edit</button>
-                  {isAdmin && <button className="btn btn-sm btn-danger" onClick={() => handleDelete(a.id)}>Delete</button>}
+      <div className="table-container">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Serial</th>
+              <th>Status</th>
+              <th>EOL Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {assets.map((a) => {
+              const eolSoon = a.eol_date && new Date(a.eol_date) < new Date(Date.now() + 90 * 86400000) && a.status !== 'retired';
+              return (
+                <tr key={a.id} className={eolSoon ? 'row-warning' : ''}>
+                  <td style={{ fontWeight: 500 }}>{a.name}</td>
+                  <td><span className="badge badge-maintenance">{a.category}</span></td>
+                  <td style={{ color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '13px' }}>{a.serial_number || '—'}</td>
+                  <td><span className={`badge badge-${a.status}`}>{a.status}</span></td>
+                  <td>{a.eol_date || '—'}</td>
+                  <td className="actions">
+                    <button className="btn btn-sm btn-ghost" onClick={() => openEdit(a)}>Edit</button>
+                    {isAdmin && <button className="btn btn-sm btn-danger" onClick={() => handleDelete(a.id)}>Delete</button>}
+                  </td>
+                </tr>
+              );
+            })}
+            {assets.length === 0 && (
+              <tr>
+                <td colSpan={6}>
+                  <div className="empty-state">
+                    <div className="empty-icon">&#9632;</div>
+                    <p>No assets found. {search || filterStatus ? 'Try different filters.' : isAdmin ? 'Click "+ Add Asset" to get started.' : ''}</p>
+                  </div>
                 </td>
               </tr>
-            );
-          })}
-          {assets.length === 0 && (
-            <tr><td colSpan={6} className="text-center">No assets found</td></tr>
-          )}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

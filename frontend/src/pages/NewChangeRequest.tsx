@@ -33,9 +33,16 @@ export default function NewChangeRequest() {
 
   return (
     <div>
-      <h1>New Change Request</h1>
+      <div className="page-header">
+        <div>
+          <h1>New Change Request</h1>
+          <p className="page-subtitle">Submit a request for a change to be reviewed by an admin</p>
+        </div>
+      </div>
+
       {error && <div className="alert alert-error">{error}</div>}
-      <form className="card form-card" onSubmit={handleSubmit}>
+
+      <form className="card form-card" onSubmit={handleSubmit} style={{ maxWidth: '640px' }}>
         <div className="form-group">
           <label>Request Type</label>
           <select className="input" value={form.request_type} onChange={(e) => setForm({ ...form, request_type: e.target.value })}>
@@ -57,13 +64,29 @@ export default function NewChangeRequest() {
         </div>
         <div className="form-group">
           <label>Description *</label>
-          <textarea className="input" required rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Describe the change you need..." />
+          <textarea
+            className="input"
+            required
+            rows={3}
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            placeholder="Describe the change you need..."
+          />
         </div>
         <div className="form-group">
           <label>Justification</label>
-          <textarea className="input" rows={2} value={form.justification} onChange={(e) => setForm({ ...form, justification: e.target.value })} placeholder="Why is this change needed?" />
+          <textarea
+            className="input"
+            rows={2}
+            value={form.justification}
+            onChange={(e) => setForm({ ...form, justification: e.target.value })}
+            placeholder="Why is this change needed? Provide context for the admin reviewing this request."
+          />
         </div>
-        <button type="submit" className="btn btn-primary">Submit Request</button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button type="submit" className="btn btn-primary">Submit Request</button>
+          <button type="button" className="btn btn-outline" onClick={() => navigate('/change-requests')}>Cancel</button>
+        </div>
       </form>
     </div>
   );

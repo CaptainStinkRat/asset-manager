@@ -24,7 +24,7 @@ export default function Login() {
     <div className="auth-page">
       <div className="auth-card">
         <h1>Asset Manager</h1>
-        <h2>Sign In</h2>
+        <h2>Sign in to your account</h2>
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -32,6 +32,7 @@ export default function Login() {
             <input
               type="text"
               className="input"
+              placeholder="Enter your username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -42,6 +43,7 @@ export default function Login() {
             <input
               type="password"
               className="input"
+              placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -52,7 +54,7 @@ export default function Login() {
           </button>
         </form>
         <p className="auth-link">
-          No account? <Link to="/register">Register here</Link>
+          Don't have an account? <Link to="/register">Create one</Link>
         </p>
       </div>
     </div>

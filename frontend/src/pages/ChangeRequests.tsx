@@ -34,7 +34,10 @@ export default function ChangeRequests() {
   return (
     <div>
       <div className="page-header">
-        <h1>Change Requests</h1>
+        <div>
+          <h1>Change Requests</h1>
+          <p className="page-subtitle">Track and manage change requests</p>
+        </div>
         <button className="btn btn-primary" onClick={() => navigate('/change-requests/new')}>
           + New Request
         </button>
@@ -49,19 +52,26 @@ export default function ChangeRequests() {
         </select>
       </div>
 
+      {requests.length === 0 && (
+        <div className="card empty-state">
+          <div className="empty-icon">&#9998;</div>
+          <p>No change requests found.</p>
+        </div>
+      )}
+
       {requests.map((cr) => (
         <div key={cr.id} className={`card request-card request-${cr.status}`}>
           <div className="request-header">
             <span className={`badge badge-${cr.status}`}>{cr.status}</span>
-            <span className="request-type">{cr.request_type.replace('_', ' ')}</span>
-            <span className="request-date">{new Date(cr.created_at).toLocaleDateString()}</span>
+            <span className="request-type">{cr.request_type.replace(/_/g, ' ')}</span>
+            <span className="request-date">{new Date(cr.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
           </div>
           <p className="request-desc">{cr.description}</p>
-          {cr.justification && <p className="request-just"><em>{cr.justification}</em></p>}
+          {cr.justification && <p className="request-just">"{cr.justification}"</p>}
           <div className="request-meta">
-            <span>By: {cr.requester?.username}</span>
-            {cr.asset && <span>Asset: {cr.asset.name}</span>}
-            {cr.reviewer && <span>Reviewed by: {cr.reviewer.username}</span>}
+            <span>By <strong>{cr.requester?.username}</strong></span>
+            {cr.asset && <span>Asset: <strong>{cr.asset.name}</strong></span>}
+            {cr.reviewer && <span>Reviewed by <strong>{cr.reviewer.username}</strong></span>}
           </div>
           {cr.review_notes && <div className="alert alert-info">{cr.review_notes}</div>}
           {isAdmin && cr.status === 'pending' && (
@@ -69,19 +79,22 @@ export default function ChangeRequests() {
               <button className="btn btn-sm btn-success" onClick={async () => {
                 await api.put(`/change-requests/${cr.id}/review`, { status: 'approved', review_notes: '' });
                 load();
-              }}>Approve</button>
+              }}>
+                &#10003; Approve
+              </button>
               <button className="btn btn-sm btn-danger" onClick={async () => {
                 const notes = prompt('Reason for denial:');
                 if (notes !== null) {
                   await api.put(`/change-requests/${cr.id}/review`, { status: 'denied', review_notes: notes });
                   load();
                 }
-              }}>Deny</button>
+              }}>
+                &#10005; Deny
+              </button>
             </div>
           )}
         </div>
       ))}
-      {requests.length === 0 && <p className="text-center">No change requests found.</p>}
     </div>
   );
 }
