@@ -119,6 +119,8 @@ class AssignmentOut(BaseModel):
 class ChangeRequestCreate(BaseModel):
     request_type: RequestType
     asset_id: Optional[int] = None
+    target_user_id: Optional[int] = None
+    target_group_id: Optional[int] = None
     description: str
     justification: str = ""
 
@@ -133,6 +135,8 @@ class ChangeRequestOut(BaseModel):
     requester_id: int
     request_type: RequestType
     asset_id: Optional[int] = None
+    target_user_id: Optional[int] = None
+    target_group_id: Optional[int] = None
     description: str
     justification: str
     status: ChangeRequestStatus
@@ -143,6 +147,8 @@ class ChangeRequestOut(BaseModel):
     requester: Optional[UserOut] = None
     reviewer: Optional[UserOut] = None
     asset: Optional[AssetOut] = None
+    target_user: Optional[UserOut] = None
+    target_group: Optional[GroupOut] = None
 
     model_config = {"from_attributes": True}
 
