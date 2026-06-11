@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import engine, Base
-from app.routers import auth, assets, assignments, change_requests, dashboard
+from app.routers import auth, assets, assignments, change_requests, dashboard, groups
 
 
 @asynccontextmanager
@@ -29,6 +29,7 @@ app.include_router(assets.router, prefix="/api/assets", tags=["assets"])
 app.include_router(assignments.router, prefix="/api/assignments", tags=["assignments"])
 app.include_router(change_requests.router, prefix="/api/change-requests", tags=["change-requests"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["dashboard"])
+app.include_router(groups.router, prefix="/api/groups", tags=["groups"])
 
 
 @app.get("/api/health")
