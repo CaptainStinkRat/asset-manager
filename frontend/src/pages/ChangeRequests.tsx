@@ -14,6 +14,8 @@ interface CR {
   requester: { id: number; username: string };
   reviewer: { id: number; username: string } | null;
   review_notes: string;
+  target_user: { id: number; username: string } | null;
+  target_group: { id: number; name: string } | null;
 }
 
 export default function ChangeRequests() {
@@ -71,6 +73,8 @@ export default function ChangeRequests() {
           <div className="request-meta">
             <span>By <strong>{cr.requester?.username}</strong></span>
             {cr.asset && <span>Asset: <strong>{cr.asset.name}</strong></span>}
+            {cr.target_user && <span>Target: <strong>{cr.target_user.username}</strong></span>}
+            {cr.target_group && <span>Target Group: <strong>{cr.target_group.name}</strong></span>}
             {cr.reviewer && <span>Reviewed by <strong>{cr.reviewer.username}</strong></span>}
           </div>
           {cr.review_notes && <div className="alert alert-info">{cr.review_notes}</div>}

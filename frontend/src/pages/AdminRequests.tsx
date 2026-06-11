@@ -13,6 +13,8 @@ interface CR {
   requester: { id: number; username: string };
   reviewer: { id: number; username: string } | null;
   review_notes: string;
+  target_user: { id: number; username: string } | null;
+  target_group: { id: number; name: string } | null;
 }
 
 export default function AdminRequests() {
@@ -84,6 +86,16 @@ export default function AdminRequests() {
           {cr.asset && (
             <div className="request-meta">
               <span>Asset: <strong>{cr.asset.name}</strong></span>
+            </div>
+          )}
+          {cr.target_user && (
+            <div className="request-meta">
+              <span>Target: <strong>{cr.target_user.username}</strong></span>
+            </div>
+          )}
+          {cr.target_group && (
+            <div className="request-meta">
+              <span>Target Group: <strong>{cr.target_group.name}</strong></span>
             </div>
           )}
 
