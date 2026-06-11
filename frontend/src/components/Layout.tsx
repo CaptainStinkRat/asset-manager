@@ -100,6 +100,11 @@ export default function Layout() {
             Assets
           </NavLink>
 
+          <NavLink to="/groups" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+            <AssetsIcon />
+            Groups
+          </NavLink>
+
           <div className="nav-label">Changes</div>
           <NavLink to="/change-requests" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
             <RequestsIcon />
